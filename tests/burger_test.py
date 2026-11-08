@@ -1,4 +1,5 @@
 import pytest
+
 from praktikum.bun import Bun
 from praktikum.burger import Burger
 from praktikum.ingredient import Ingredient
@@ -32,8 +33,7 @@ class TestBurger:
         burger.add_ingredient(ingredient1)
         burger.add_ingredient(ingredient2)
         burger.remove_ingredient(0)
-        assert len(burger.ingredients) == 1
-        assert burger.ingredients[0] == ingredient2
+        assert burger.ingredients == [ingredient2]
 
     def test_move_ingredient(self):
         burger = Burger()
@@ -44,28 +44,43 @@ class TestBurger:
         burger.add_ingredient(ingredient2)
         burger.add_ingredient(ingredient3)
         burger.move_ingredient(0, 2)
-        assert burger.ingredients[0] == ingredient2
-        assert burger.ingredients[1] == ingredient3
-        assert burger.ingredients[2] == ingredient1
+        assert burger.ingredients == [ingredient2, ingredient3, ingredient1]
 
-    def test_get_price(self):
+    def test_get_price_uses_ingredient_price(self, mocker):
+        mock_ingredient = mocker.Mock()
+        mock_ingredient.get_price.return_value = 250
+
         burger = Burger()
-        bun = Bun("black bun", 100)
-        ingredient1 = Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100)
-        ingredient2 = Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200)
-        burger.set_buns(bun)
-        burger.add_ingredient(ingredient1)
-        burger.add_ingredient(ingredient2)
+        burger.set_buns(Bun("black bun", 100))
+        burger.add_ingredient(mock_ingredient)
+
+        assert burger.get_price() == 100 * 2 + 250
+        mock_ingredient.get_price.assert_called_once()
+
+    def test_get_price_with_real_ingredients(self):
+        burger = Burger()
+        burger.set_buns(Bun("black bun", 100))
+        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100))
+        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200))
         assert burger.get_price() == 100 * 2 + 100 + 200  # 500
 
-    def test_get_receipt(self):
+    def test_get_receipt_uses_mocked_bun(self, mocker):
+        mock_bun = mocker.Mock()
+        mock_bun.get_name.return_value = "test bun"
+        mock_bun.get_price.return_value = 0
+
         burger = Burger()
-        bun = Bun("black bun", 100)
-        ingredient1 = Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100)
-        ingredient2 = Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200)
-        burger.set_buns(bun)
-        burger.add_ingredient(ingredient1)
-        burger.add_ingredient(ingredient2)
+        burger.set_buns(mock_bun)
+        receipt = burger.get_receipt()
+
+        assert "(==== test bun ====)" in receipt
+        mock_bun.get_name.assert_called()
+
+    def test_get_receipt_with_real_objects(self):
+        burger = Burger()
+        burger.set_buns(Bun("black bun", 100))
+        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_SAUCE, "hot sauce", 100))
+        burger.add_ingredient(Ingredient(INGREDIENT_TYPE_FILLING, "cutlet", 200))
         receipt = burger.get_receipt()
         assert "(==== black bun ====)" in receipt
         assert "= sauce hot sauce =" in receipt

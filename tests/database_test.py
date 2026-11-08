@@ -1,18 +1,23 @@
 import pytest
+
 from praktikum.database import Database
 
 
 class TestDatabase:
 
-    def test_available_buns(self):
+    @pytest.mark.parametrize("index, expected_name", [
+        (0, "black bun"),
+        (1, "white bun"),
+        (2, "red bun"),
+    ])
+    def test_available_buns(self, index, expected_name):
         db = Database()
-        buns = db.available_buns()
-        assert len(buns) == 3
-        assert buns[0].get_name() == "black bun"
-        assert buns[1].get_name() == "white bun"
-        assert buns[2].get_name() == "red bun"
+        assert db.available_buns()[index].get_name() == expected_name
 
-    def test_available_ingredients(self):
+    def test_available_buns_count(self):
         db = Database()
-        ingredients = db.available_ingredients()
-        assert len(ingredients) == 6
+        assert len(db.available_buns()) == 3
+
+    def test_available_ingredients_count(self):
+        db = Database()
+        assert len(db.available_ingredients()) == 6

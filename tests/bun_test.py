@@ -1,4 +1,5 @@
 import pytest
+
 from praktikum.bun import Bun
 
 
@@ -9,10 +10,12 @@ class TestBun:
         assert bun.name == "black bun"
         assert bun.price == 100
 
-    def test_get_name(self):
-        bun = Bun("white bun", 200)
-        assert bun.get_name() == "white bun"
-
-    def test_get_price(self):
-        bun = Bun("red bun", 300)
-        assert bun.get_price() == 300
+    @pytest.mark.parametrize("name, price", [
+        ("black bun", 100),
+        ("white bun", 200),
+        ("red bun", 300),
+    ])
+    def test_get_name_and_price(self, name, price):
+        bun = Bun(name, price)
+        assert bun.get_name() == name
+        assert bun.get_price() == price
